@@ -10,10 +10,10 @@
                         <div class="px-4 py-5 sm:p-6">
                             <div class="mt-2 max-w-xl text-sm text-gray-500">
                                 <p>
-                                    <em> input  phone number to verify identity </em>
+                                    <em> input token sent to your phone </em>
                                 </p>
                             </div>
-                            <form action="#" @submit.prevent="submit" class="space-y-6 mt-5 sm:flex sm:items-center">
+                            <form action="#" @submit.prevent="submit" class="flex flex-col">
                                 <div class="w-full sm:max-w-xs">
                                     <input type="text" name="otp_code" v-model="form.otp_code" id="otp_code"  required="" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="" />
                                 </div>
@@ -122,7 +122,6 @@ export default {
                 this.$router.go()
             })
                 .catch((err) =>{
-                    console.log(err)
                     this.errors = {'message' : 'Phone Number Could not be validated.'}
                 })
         }

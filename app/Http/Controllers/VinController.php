@@ -24,14 +24,11 @@ class VinController extends Controller
         ]);
         $vinFound = $this->vinFetcher->retrieveVINFromStore($request->user(), $request->vin);
         $salvageFound = $this->vinFetcher->retrieveSalvageDataFromStore($request->user(), $request->vin);
-
         if ($vinFound['success']) {
             $data = [
                 'specification' => $vinFound['data'],
-                'salvage' => $salvageFound,
+                'salvage' => $salvageFound['success'] == true ? $salvageFound['data'] : null,
             ];
-
-//            dd($data);
 //            Cache Data
             return response()->json(['success' => true, 'message' => '', 'data' => $data], 200);
         } else {

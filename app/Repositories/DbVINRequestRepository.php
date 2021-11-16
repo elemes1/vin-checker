@@ -52,7 +52,7 @@ class DbVINRequestRepository implements VINRequestInterface
             $param = http_build_query([
                 'vin' => $code,
             ]);
-            $url = env('VIN_DECODE_URL') . '?' . $param;
+            $url = env('VIN_SALVAGE_URL') . '?' . $param;
             $response = Http::withHeaders([
                 'x-rapidapi-host' => env('VIN_HEADER_HOST_VALUE'),
                 'x-rapidapi-key' => env('VIN_HEADER_HOST_KEY'),
@@ -61,16 +61,28 @@ class DbVINRequestRepository implements VINRequestInterface
             );
 
             if ($response->successful()) {
-                $data = json_decode($response->body())->specification;
-                $data = Cache::remember($code . '-salvage', 5000, function () use ($data) {
-                    return $data;
-                });
-                $this->storeVINSalvageRecord($code);
-                DB::commit();
-
-                return ['success' => true, 'message' => json_decode($response->body())->success, 'data' => $data];
+                $success = json_decode($response->body())->success;
+                if ($success) {
+                    $reponseData = json_decode($response->body());
+                    $data['is_salvage'] =  $reponseData->is_salvage ;
+                    $data['info'] =  $reponseData->info ;
+                }
+                else {
+                    $data['is_salvage'] =  false ;
+                    $data['info'] =  null ;
+                }
+                    $data = Cache::remember($code . '-salvage', 5000, function () use ($data) {
+                        return $data;
+                    });
+                    $this->storeVINSalvageRecord($code);
+                    DB::commit();
+                    return [
+                        'success' => $success,
+                        'message' => json_decode($response->body())->success,
+                        'data' => $data,
+                    ];
             } else {
-                return ['success' => false, 'message' => json_decode($response->body())->success];
+                return ['success' => false, 'message' => json_decode($response->body())->message];
             }
         } catch (\Exception $exception) {
             DB::rollBack();
@@ -88,7 +100,7 @@ class DbVINRequestRepository implements VINRequestInterface
     public function retrieveVINFromStore($user, $code)
     {
         if (Cache::has($code)) {
-            $specData = Cache::get('key');
+            $specData = Cache::get($code);
             if ($specData == null) {
                 return $this->searchVin($code);
             }
@@ -102,11 +114,10 @@ class DbVINRequestRepository implements VINRequestInterface
     public function retrieveSalvageDataFromStore($user, $code)
     {
         if (Cache::has($code . '-salvage')) {
-            $salvageData = Cache::get('key');
+            $salvageData = Cache::get($code . '-salvage');
             if ($salvageData == null) {
                 return $this->checkSalvageRecord($code);
             }
-
             return ['success' => true, 'message' => '', 'data' => $salvageData];
         } else {
             return $this->checkSalvageRecord($code);

@@ -1,49 +1,62 @@
 <template>
-    <div class=" w-full pb-72 main" style="">
-        <div class="search flex justify-center pt-36" >
-            <form action="" class="flex flex-col" >
-                <input type="text" class="border-2 border-purple-300  px-3 w-96 h-12 py-3 placeholder-gray-400 text-gray-400  bg-white  rounded text-sm shadow focus:outline-none focus:ring"  placeholder="Search VIN" style="transition: all 0.15s ease 0s;"/>
-                <input class="items-center text-center cursor-pointer text-white  rounded-md bg-purple-600  w-24 h-10 mt-4" type="submit" value="Submit">
-            </form>
-        </div>
-        <div class="mx-auto px-4 sm:px-6 lg:px-8">
-            <h1 class="sr-only">Page title</h1>
-            <!-- Main 3 column grid -->
-            <div class="grid grid-cols-1 gap-4 items-start lg:grid-cols-3 lg:gap-8">
-                <!-- Left column -->
-                <div class="grid grid-cols-1 gap-4 lg:col-span-2 ">
-                    <section aria-labelledby="section-1-title filter ">
-                        <h2 class="sr-only" id="section-1-title">Section title</h2>
-                        <div class="rounded-lg bg-white overflow-hidden shadow-lg">
-                            <div class="p-6">
-                                <!-- Your content -->
-                            </div>
+    <div class=" main leading-normal tracking-normal text-indigo-400 m-6 bg-cover bg-fixed">
+        <div class="h-full">
+            <div class="w-full container mx-auto">
+                <div class="w-full flex items-center justify-between">
+                    <a class="flex items-center text-indigo-400 no-underline hover:no-underline font-bold text-2xl lg:text-4xl"
+                        href="#"> VIN Decoder and Lookup </a>
+                </div>
+            </div>
+
+            <div class="container pt-24 md:pt-36 mx-auto flex flex-wrap flex-col md:flex-row items-center">
+                <div class="flex flex-col w-full xl:w-2/5 justify-center lg:items-start overflow-y-hidden">
+                    <p class="leading-normal text-base md:text-2xl mb-8 text-center md:text-left">
+                        Decode Your Vehicle Identification Number for Free
+                    </p>
+                    <form action="#" @submit.prevent="submit"
+                        class="bg-gray-100 opacity-75 w-full shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4">
+                        <div class="mb-4">
+                            <label class="block text-indigo-800 py-2 font-bold mb-2" for="vin">
+
+                                <button type="button" @click="enterSample()">
+                                    Try a Sample VIN
+                                </button>
+                            </label>
+                            <input
+                                class="shadow appearance-none border rounded w-full p-3 text-gray-700 leading-tight focus:ring transform transition hover:scale-105 duration-300 ease-in-out"
+                                name="vin"
+                                v-model="form.vin"
+                                id="vin"
+                                required
+                                type="text"
+                                placeholder="Enter Your VIN"
+                            />
+                            <span v-show="errors.vin" class="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1">
+                                {{errors.vin}}
+                            </span>
                         </div>
-                    </section>
+                        <div class="flex items-center justify-between pt-4">
+                            <button
+                                class="bg-gradient-to-r from-purple-800 to-green-500 hover:from-pink-500 hover:to-green-500 text-white font-bold py-2 px-4 rounded focus:ring transform transition hover:scale-105 duration-300 ease-in-out"
+                                type="submit"
+                            >
+                                Submit
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div v-show="details==null" class="w-full xl:w-3/5 p-12 overflow-hidden">
+                    <img class="mx-auto w-full md:w-4/5 transform -rotate-6 transition hover:scale-105 duration-700 ease-in-out hover:rotate-6"  src="https://myfreevin.com/wp-content/uploads/2020/02/vin-decoder-explainer-1.png" />
                 </div>
 
-                <!-- Right column -->
-                <div class="grid grid-cols-1 gap-4">
-                    <section aria-labelledby="section-2-title">
-                        <h2 class="sr-only" id="section-2-title">Section title</h2>
-                        <div class="rounded-lg bg-white overflow-hidden shadow-lg">
-                            <div class="p-6">
-                                <!-- Your content -->
-                            </div>
-                        </div>
-                    </section>
+                <div v-show="details !== null" class="w-full xl:w-3/5 p-12 overflow-hidden">
+                    <searchResult :details="details"/>
                 </div>
+
             </div>
         </div>
     </div>
 </template>
-
-
-<style scoped>
-.main{
-    background-image: url('../../../../assets/bg-image.png');
-}
-</style>
 
 
 <script>
@@ -51,18 +64,22 @@
 import Loading from "../../layouts/Loading";
 import Errors from "../../layouts/Errors";
 import axios from "axios";
+import searchResult from "./SearchResult";
 
 export default {
+    props : {
+    },
     components: {
         Loading,
-        Errors
+        Errors,
+        searchResult
     },
     data() {
         return {
             form: {
                 vin: '',
             },
-            details : null,
+            details: null,
             busy: false,
             errors: {
                 vin: '',
@@ -70,23 +87,32 @@ export default {
         }
     },
     methods: {
+        enterSample(){
+            this.form.vin = "4T4BF1FKXER340134"
+        },
         async submit() {
             this.busy = true;
-            this.errors = null
+            this.details = {};
+            this.errors.vin = null
             this.success = ''
             try {
                 await axios.get('/sanctum/csrf-cookie')
-                await axios.post('/api/search-vin',this.form).then(response=>{
-                    if(!response.data.success){
-                        this.busy = false ;
-                        this.success = response.data
+                await axios.post('/api/search-vin', this.form).then(response => {
+                    if (!response.data.success) {
+                        this.busy = false;
+                        this.success = response.data;
+                        this.details = null;
+                    }else{
+
+                        this.busy = false;
+                        this.details = response.data.data;
+                        this.success = response.data.message
                     }
-                    this.busy = false ;
-                    this.success = response.data.message
-                }).catch(({response:{data}})=>{
+                }).catch(({response: {data}}) => {
                     this.busy = false;
+                    this.details = null;
                     this.errors = data.errors
-                }).finally(()=>{
+                }).finally(() => {
                     this.busy = false;
                 })
             } catch (e) {
@@ -95,6 +121,4 @@ export default {
         }
     }
 }
-
-V
 </script>

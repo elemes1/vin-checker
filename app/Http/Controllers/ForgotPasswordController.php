@@ -19,7 +19,7 @@ class ForgotPasswordController extends Controller
         );
 
         return response()->json([
-            "msg" => "If you've provided registered e-mail, you should get recovery e-mail shortly.",
+            "msg" => "Password reset successful, new password has been sent to your email",
         ], 200);
     }
 }

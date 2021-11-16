@@ -9,7 +9,13 @@ class AuthController extends Controller
 {
     //
 
-    public function Login(Request $request)
+    public function home(Request $request)
+    {
+        return response()->json([
+            'message' => 'Pending verification Actions'
+        ], 200);
+    }
+    public function login(Request $request)
     {
 
         $credentials = $request->validate([

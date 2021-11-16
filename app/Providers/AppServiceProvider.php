@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Contracts\OTPRequestInterface;
+use App\Contracts\VINRequestInterface;
+use App\Repositories\DbOTPRequestRepository;
+use App\Repositories\DbVINRequestRepository;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,7 +17,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->bind(
+            OTPRequestInterface::class,
+            DbOTPRequestRepository::class
+        );
+        $this->app->bind(
+            VINRequestInterface::class,
+            DbVINRequestRepository::class
+        );
     }
 
     /**

@@ -1,39 +1,56 @@
 <template>
-    <div id="app">
-        <div id="nav">
-            <router-link to="/">Home</router-link> |
-            <template v-if="!authenticated">
-                <router-link to="/login">Sign in</router-link> |
-            </template>
-            <template v-else>
-                <router-link to="/account">{{ user.name }}</router-link> |
-                <a href="#" @click.prevent="signOut">Sign out</a>
-            </template>
-        </div>
-        <router-view/>
-    </div>
+<div>
+<div>
+    <nav-bar></nav-bar>
+</div>
+<div >
+    <router-view  id="layer"  v-slot="{ Component }">
+        <transition name="fade" mode="out-in" >
+            <component :is="Component" />
+        </transition>
+    </router-view>
+</div>
+</div>
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import NavBar from './layouts/NavBar.vue'
+import {mapGetters} from "vuex";
 
 export default {
     computed: {
         ...mapGetters({
             authenticated: 'auth/authenticated',
             user: 'auth/user',
-        })
-    },
-
-    methods: {
-        ...mapActions({
-            signOutAction: 'auth/signOut'
-        }),
-
-        async signOut () {
-            await this.signOutAction()
-            this.$router.replace({ name: 'home' })
+            phoneValidated: 'auth/phoneValidated',
+        }) ,
+        id () {
+            if(this.user){
+                return this.user.id
+            }
+            return null
+        },
+        phoneValidated () {
+            if(this.user){
+                return this.phoneValidated
+            }
+            return false
         }
+    },
+    components : {
+        NavBar
     }
 }
 </script>
+<style>
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+</style>

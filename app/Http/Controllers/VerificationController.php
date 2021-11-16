@@ -2,68 +2,71 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\OTPRequestInterface;
+use App\Events\UserValidatedViaPhone;
 use App\Models\User;
-use Illuminate\Auth\Access\AuthorizationException;
-//use Illuminate\Foundation\Auth\VerifiesEmails;
 use Illuminate\Http\Request;
+
+//use Illuminate\Foundation\Auth\VerifiesEmails;
 
 class VerificationController extends Controller
 {
-    //
-//    use VerifiesEmails;
+    /**
+     * @var OTPRequestInterface
+     */
+    private $otpGenerator;
+
+    public function __construct(OTPRequestInterface $otpRequest)
+    {
+        $this->otpGenerator = $otpRequest;
+    }
 
     /**
      * Mark the authenticated user's email address as verified.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      *
      */
+
+    public function sendCode(Request $request)
+    {
+
+        $user = $request->user();
+        $otpGenerated = $this->otpGenerator->generateOTP($user, 6, 3600);
+        if ($otpGenerated['success']) {
+            return response()->json(['success' => true, 'message' => 'OTP sent'], 200);
+        } else {
+            return response()->json(
+                ['success' => false, 'message' => 'OTP notification failed , Try Again Later', 'description' => $otpGenerated['message'] ]
+            );
+        }
+    }
 
     public function verify(Request $request)
     {
-        $user = User::findOrFail($request->route('id'));
-
-        if (
-            !hash_equals((string) $request->route('id'), (string) $user->getKey())
-            || !hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))
-        ) {
-
-            return response()->json(['message' => 'Verification error ! Try again'], 500);
+        $code = $request->otp_code;
+        $user = $request->user();
+        $otpVerified = $this->otpGenerator->verifyOTP($user, $code);
+        if ($otpVerified['success']) {
+            event(new UserValidatedViaPhone($user));
+            return response()->json(['success' => true, 'message' => 'OTP Valid']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'Invalid OTP', 'description' => $otpVerified['message']]);
         }
-
-
-        if ($user->hasVerifiedEmail()) {
-            return response()->json(['message' => 'already verified !'], 200);
-        }
-
-        if ($user->markEmailAsVerified()) {
-            return response()->json(['message' => 'email verified successfully !'], 200);
-        }
-
-        return response()->json(['verified' => true]);
     }
 
-
-    /**
-     * Resend the email verification notification.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     */
     public function resend(Request $request)
     {
+        return response()->json(['success' => true, 'message' => 'OTP sent']);
 
-        $this->validate($request, ['id' => 'required']);
-
-        $user = User::find($request->id);
-
-        if (!$user)  return response()->json(['message' => 'Verification error '], 500);
-
-
-        if ($user->hasVerifiedEmail()) {
-            return response()->json(['message' => 'already verified !'], 200);
+        $user = $request->user();
+        $otpGenerated = $this->otpGenerator->resendOtp($user);
+        if ($otpGenerated['success']) {
+            return response()->json(['success' => true, 'message' => 'OTP sent'], 200);
+        } else {
+            return response()->json(
+                ['success' => false, 'message' => 'OTP notification failed , Try Again Later' ,  'description' => $otpGenerated['message']]
+            );
         }
-
-        $user->sendEmailVerificationNotification();
-        return response()->json(['message' => 'verification email has been resent !', 200]);
     }
 }

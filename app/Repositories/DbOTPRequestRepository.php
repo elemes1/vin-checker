@@ -1,6 +1,7 @@
 <?php namespace App\Repositories;
 
 use App\Contracts\OTPRequestInterface;
+use App\Events\OTPSent;
 use App\Models\UserOTP;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -77,7 +78,7 @@ class DbOTPRequestRepository implements OTPRequestInterface
             );
             if ($response->successful()) {
                 DB::commit();
-
+                event(new OTPSent($owner));
                 return ['success' => true, 'message' => json_decode($response->body())->message];
             } else {
                 return ['success' => false, 'message' => json_decode($response->body())->message];

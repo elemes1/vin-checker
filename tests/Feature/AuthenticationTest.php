@@ -18,28 +18,33 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_users_can_authenticate_using_the_login_screen()
+    public function test_users_can_authenticate_using_api()
     {
         $user = User::factory()->create();
-
-        $response = $this->post('/login', [
+        $response = $this->post('/api/login', [
             'email' => $user->email,
             'password' => 'password',
         ]);
 
+        $response->assertStatus(200);
         $this->assertAuthenticated();
-        $response->assertRedirect(RouteServiceProvider::HOME);
+        $response->assertJsonStructure([
+            'access_token',
+            'token_type'
+        ]);
     }
 
-    public function test_users_can_not_authenticate_with_invalid_password()
+    public function test_users_cannot_authenticate_using_api()
     {
         $user = User::factory()->create();
-
-        $this->post('/login', [
+        $response = $this->post('/api/login', [
             'email' => $user->email,
             'password' => 'wrong-password',
         ]);
-
+        $response->assertStatus(500);
         $this->assertGuest();
+        $response->assertJsonStructure([
+            'message',
+        ]);
     }
 }

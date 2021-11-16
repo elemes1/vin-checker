@@ -33,14 +33,14 @@ class VinController extends Controller
 
 //            dd($data);
 //            Cache Data
-            return response()->json(['success' => true, 'message' => '', 'data' => $data, 200);
+            return response()->json(['success' => true, 'message' => '', 'data' => $data], 200);
         } else {
             return response()->json(
                 [
                     'success' => false,
                     'message' => 'OTP notification failed , Try Again Later',
-                    'description' => $found['message'],
-                    'data' => $found['message'],
+                    'description' => $vinFound['message'],
+                    'data' => $vinFound['message'],
                 ]
             );
         }

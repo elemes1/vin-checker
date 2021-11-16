@@ -22,7 +22,6 @@
                 </tr>
             </tbody>
         </table>
-
         <table v-if="details.salvage != null" class="table table-striped">
             <thead>
                 <tr>

@@ -43,6 +43,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'phone_validated_at' => 'datetime',
     ];
 
     public function otps()

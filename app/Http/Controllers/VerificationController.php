@@ -57,7 +57,6 @@ class VerificationController extends Controller
 
     public function resend(Request $request)
     {
-        return response()->json(['success' => true, 'message' => 'OTP sent']);
 
         $user = $request->user();
         $otpGenerated = $this->otpGenerator->resendOtp($user);
